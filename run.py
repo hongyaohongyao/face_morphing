@@ -13,6 +13,13 @@ from point_utils import add_points_helper
 
 
 def get_ext_points(ext_points_path, src_img, dst_img):
+    """
+    get extra face points, or show GUI for selecting face points manually
+    :param ext_points_path: json file path
+    :param src_img: source image
+    :param dst_img: destination image
+    :return:
+    """
     try:
         with open(ext_points_path, 'r') as f:
             json_points = json.load(f)
@@ -31,17 +38,16 @@ def get_ext_points(ext_points_path, src_img, dst_img):
 def morph(src_img, src_points, dst_img, dst_points, ext_points_path=None,
           size=(600, 500), out_folder=None, background='black', args=None):
     """
-    生成从原图到目标图像的morphing序列
-    :param ext_points_path: 额外点的路径
-    :param size: 图像尺寸(h,w)
-    :param src_img: 原图
-    :param src_points: 原图人脸的x,y序列
-    :param dst_img: 目标图像
-    :param out_folder: 输出文件夹
-    :param dst_points: 目标图人脸的x,y序列
-    :param background: 背景颜色
-    :param plot: 是否输出过程图
-    :param args: 其他参数
+    generate the morphing sequence from source image to destination image
+    :param ext_points_path: file path for extra points
+    :param size: output image path(h,w)
+    :param src_img: source image
+    :param src_points: (x,y) sequence of source image
+    :param dst_img: destination image
+    :param dst_points: (x,y) sequence of destination image
+    :param out_folder: output folder
+    :param background: background type or color
+    :param args: other args
     """
 
     plt = plot_utils.Plotter(args.plot, gif=args.gif, num_images=args.num_frames, out_folder=out_folder, fps=args.fps)
@@ -61,7 +67,7 @@ def morph(src_img, src_points, dst_img, dst_points, ext_points_path=None,
     if background == "origin":
         src_points = np.concatenate([src_points, border_points2[0]])
         dst_points = np.concatenate([dst_points, border_points2[1]])
-    # 开始morphing
+    # start morphing
     for percent in np.linspace(1, 0, args.num_frames):
         points = weighted_average_points(src_points, dst_points, percent)
         src_face = warp_image(src_img, src_points, points, size)
@@ -92,8 +98,6 @@ def morph(src_img, src_points, dst_img, dst_points, ext_points_path=None,
         plt.add_frame(average_face)
         plt.save(average_face)
 
-    # plt.plot_one(dest_img)
-
     plt.show()
     plt.output_gif()
 
@@ -103,14 +107,14 @@ def morph(src_img, src_points, dst_img, dst_points, ext_points_path=None,
         src_face = warp_image(src_img, src_points, points, size)
         end_face = warp_image(dst_img, dst_points, points, size)
 
-        src_img = img_utils.draw_mesh(src_img, src_points)
-        dst_img = img_utils.draw_mesh(dst_img, dst_points)
-        src_face = img_utils.draw_mesh(src_face, points, color=(255, 0, 0))
-        end_face = img_utils.draw_mesh(end_face, points, color=(255, 0, 0))
+        src_img = img_utils.draw_mesh(src_img, src_points, color=(255, 0, 0))
+        dst_img = img_utils.draw_mesh(dst_img, dst_points, color=(0, 255, 0))
+        src_face = img_utils.draw_mesh(src_face, points, color=(255, 255, 0))
+        end_face = img_utils.draw_mesh(end_face, points, color=(255, 255, 0))
 
-        src_mesh = img_utils.draw_mesh(np.full_like(src_img, 255), src_points)
-        dst_mesh = img_utils.draw_mesh(np.full_like(dst_img, 255), dst_points)
-        avg_mesh = img_utils.draw_mesh(np.full_like(src_img, 255), points, color=(255, 0, 0))
+        src_mesh = img_utils.draw_mesh(np.full_like(src_img, 255), src_points, color=(255, 0, 0))
+        dst_mesh = img_utils.draw_mesh(np.full_like(dst_img, 255), dst_points, color=(0, 255, 0))
+        avg_mesh = img_utils.draw_mesh(np.full_like(src_img, 255), points, color=(255, 255, 0))
 
         cv2.imwrite(os.path.join(out_folder, "src_mesh.jpg"), src_img)
         cv2.imwrite(os.path.join(out_folder, "src_mesh_alpha05.jpg"), src_face)
